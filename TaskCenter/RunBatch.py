@@ -13,12 +13,11 @@ from Config import BaseConfig
 from Utils import BaseUtils
 from Table import TaskBatch, TaskInfo
 from . import LocalUtils
-from Utils.LogUtils import common_logger
-from Utils.LogUtils.common_logger import logging_wrapper
+import common_logger
+
 
 # 初始化日志工具
-# common_logger.init_didi_logger(BaseConfig.path_log, 'threat_intel', is_need_console=False, backupCount=10,
-#                                rotate_type='MIDNIGHT')
+common_logger.init_logger(BaseConfig.path_log, 'common_logger', is_need_console=True)
 
 
 class Batch(threading.Thread):
@@ -91,6 +90,7 @@ class Batch(threading.Thread):
             if self.retry > self.retry_max_times:
                 # 非循环任务失败，发送DC
                 if self.task_type == 0:
+                    #
                     BaseUtils.err_to_dc(task_batch_name)
                 break
             self.update_record(retry=self.retry)
@@ -151,7 +151,7 @@ class TaskManager(object):
         try:
             # 区分预发、生产的batch
             batch_infos = session_w.query(TaskInfo.TaskInfo.task_name).filter(
-                TaskInfo.TaskInfo.online == BaseConfig.DD_ENV_TYPE).all()
+                TaskInfo.TaskInfo.online == BaseConfig.ENV_TYPE).all()
             run_batch_list = [batch_info[0] for batch_info in batch_infos]
             common_logger.info(f'待执行任务数：{len(run_batch_list)}')
             # 加锁查询
@@ -167,6 +167,7 @@ class TaskManager(object):
                 # 循环任务失败判定，发送DC报警
                 if record.exec_status == 1 and record.plan_expire_time < now:
                     record.exec_status = -1
+                    # todo：替换告警函数
                     BaseUtils.err_to_dc(record.task_batch_name)
                     continue
                 dependence = json.loads(record.dependence)
@@ -269,7 +270,7 @@ class TaskManager(object):
         pass
 
 
-@logging_wrapper
+@common_logger.logging_wrapper
 def run():
     """功能入口函数"""
     # 查询 cpu 数量，决定同时执行的任务数量

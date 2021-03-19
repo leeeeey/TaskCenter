@@ -4,3 +4,4 @@ redis==3.5.3
 SQLAlchemy==1.4.0
 typing-extensions==3.7.4.3
 zipp==3.4.1
+common_logger==1.0.1

@@ -6,7 +6,7 @@ from TaskCenter import TaskScript
 from Table import TaskInfo, TaskBatch
 from .. import LocalUtils
 from Config.BaseConfig import ENV_TYPE
-from Utils.LogUtils import common_logger
+import common_logger
 
 
 class Script(TaskScript.BaseTaskScript):
@@ -26,22 +26,22 @@ class Script(TaskScript.BaseTaskScript):
 
         t = TaskInfo.TaskInfo
         try:
-            info_list = session_w.query(t).filter_by(online=ENV_TYPE).with_for_update().all()
-            for info in info_list:
+            task_list = session_w.query(t).filter_by(online=ENV_TYPE).with_for_update().all()
+            for task in task_list:
                 t = TaskBatch.TaskBatch
-                task_name = info.task_name
+                task_name = task.task_name
                 last_batch = session_w.query(t).filter_by(task_name=task_name).order_by(t.task_tag_name.desc()).first()
                 if last_batch:
                     last_start_dt = datetime.datetime.strptime(last_batch.start_time, "%Y-%m-%d %H:%M:%S")
-                    next_start_dt = info.get_next_start_dt(last_start_dt)
+                    next_start_dt = task.get_next_start_dt(last_start_dt)
                 else:
-                    next_start_dt = info.get_init_start_dt(current_dt)
+                    next_start_dt = task.get_init_start_dt(current_dt)
                 while True:
                     if next_start_dt > current_dt + datetime.timedelta(hours=3):
                         break
-                    task = info.create_new_task(next_start_dt, 1)
+                    task = task.create_new_task(next_start_dt, 1)
                     session_w.add(task)
-                    next_start_dt = info.get_next_start_dt(next_start_dt)
+                    next_start_dt = task.get_next_start_dt(next_start_dt)
             session_w.commit()
         except Exception as e:
             session_w.rollback()
