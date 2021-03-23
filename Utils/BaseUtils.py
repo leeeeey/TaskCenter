@@ -1,7 +1,5 @@
 # coding=utf-8
 import json
-import ipdb
-import minio
 import psutil
 import shutil
 import socket
@@ -10,14 +8,13 @@ import inspect
 import hashlib
 import time
 import datetime
-import elasticsearch
 import requests.adapters
 from functools import reduce
 import requests.sessions
 
 from Config import BaseConfig
-from Utils import ErrorUtils, RedisUtils
-from Utils.LogUtils.wrapper_hook_requests import log_normal_trace, log_error_trace
+from Utils import RedisUtils
+from common_logger.wrapper_hook_requests import log_normal_trace, log_error_trace
 
 
 class CSVFileReader(object):
@@ -237,60 +234,6 @@ class TmpContext(object):
                     # 解决 mac 开发环境下自动产生 ./DS_Store 文件
                     os.remove(path)
 
-
-class Time(object):
-    """时间类，提供工程内常用的时间格式转换"""
-
-    def __init__(self, time_ts_sec=None, time_dt=None, time_str=None, str_format=None):
-        """
-        初始化
-        :param time_ts_sec: 待处理时间，单位秒，int/float 类型
-        :param time_dt: 待处理时间，datetime 对象
-        :param time_str: 待处理时间，str 类型
-        :param str_format: 使用 time_str 输入待处理时间时，指定输入时间格式，默认为 "%Y-%m-%d %H:%M:%S"，str 类型
-        """
-
-        if not (time_ts_sec or time_dt or time_str):
-            raise ErrorUtils.ArgumentError("must give a time")
-
-        self.str_format = str_format or "%Y-%m-%d %H:%M:%S"
-        if time_ts_sec:
-            self.time_dt = datetime.datetime.fromtimestamp(time_ts_sec)
-        elif time_dt:
-            self.time_dt = time_dt
-        elif time_str:
-            self.time_dt = datetime.datetime.strptime(time_str, str_format)
-
-    def to_time(self, time_type, str_format=None):
-        """
-        输出指定样式时间
-        :param time_type: 数据类型，取值和含义与 __init__() 方法相同，str 类型
-        :param str_format: 与 __init__() 方法相同，str 类型
-        :return: 指定样式时间
-        """
-
-        if time_type not in ("time_ts_sec", "time_dt", "time_str"):
-            raise ErrorUtils.ArgumentError("unknown time type")
-
-        time_target = None
-        if time_type == "time_ts_sec":
-            time_target = self.time_dt.timestamp()
-        elif time_type == "time_dt":
-            time_target = self.time_dt
-        elif time_type == "time_str":
-            str_format = str_format or self.str_format
-            time_target = self.time_dt.strftime(str_format)
-        return time_target
-
-    def __getattr__(self, item):
-        """
-        使用 . 操作符调用 to_time() 方法
-        :param item:
-        :return:
-        """
-
-        if item in ("time_ts_sec", "time_dt", "time_str"):
-            return self.to_time(item)
 
 
 # todo: 尝试 retrying 包

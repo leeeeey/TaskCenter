@@ -15,10 +15,13 @@ try:
 finally:
     lock.release()
 """
-
 import hashlib
 import redis.lock
-from Utils.LogUtils import common_logger
+import common_logger
+from Config.BaseConfig import path_log
+
+common_logger.init_logger(path_log, 'threatintel', is_need_console=True, backupCount=10,
+                               rotate_type='MIDNIGHT')
 
 
 class RedisLock(redis.lock.Lock):
@@ -104,4 +107,4 @@ class Redis(redis.StrictRedis):
 
 if __name__ == '__main__':
     import os
-    os.getenv("ENV_TYPE")
+    os.getenv("DIDIENV_DDCLOUD_ENV_TYPE")

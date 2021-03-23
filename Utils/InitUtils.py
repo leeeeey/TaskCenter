@@ -1,8 +1,6 @@
 import os
 import redis
 import sqlalchemy.orm
-# todo import common_logger
-from Utils.LogUtils import common_logger
 
 
 def init_project_directory():
